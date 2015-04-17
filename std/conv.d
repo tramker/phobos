@@ -1946,7 +1946,7 @@ Target parse(Target, Source)(ref Source s)
             Target v = cast(Target)c;
             while (!s.empty)
             {
-                c = s.front - '0';
+                c = cast(typeof(c)) (s.front - '0');
                 if (c > 9)
                     break;
 
@@ -2148,6 +2148,22 @@ Lerr:
     assertCTFEable!({ string s =  "1234abc"; assert(parse! int(s) ==  1234 && s == "abc"); });
     assertCTFEable!({ string s = "-1234abc"; assert(parse! int(s) == -1234 && s == "abc"); });
     assertCTFEable!({ string s =  "1234abc"; assert(parse!uint(s) ==  1234 && s == "abc"); });
+}
+
+// Issue 14396
+@safe unittest
+{
+    struct StrInputRange
+    {
+        this (string s) { str = s; }
+        char front() const @property { return str[front_index]; }
+        char popFront() { return str[front_index++]; }
+        bool empty() const @property { return str.length <= front_index; }
+        string str;
+        size_t front_index = 0;
+    }
+    auto input = StrInputRange("777");
+    assert(parse!int(input) == 777);
 }
 
 /// ditto
